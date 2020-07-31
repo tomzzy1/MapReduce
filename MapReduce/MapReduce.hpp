@@ -26,23 +26,27 @@ public:
 		auto size = world->size();
 		auto rank = world->rank();
 		SplitType semi_table;
+		// tag 0 : map phase
 		if (rank == 0)
-		{
+		{	// MASTER distribute the raw data
 			for (int i = 1; i < size; ++i)
 			{
-				world->send(i, 0, task.split(t, size, i));
+				world->send(i, 0, task.split(t, size, i));	// the second @param: tag used to indicate the phase
 			}
 			semi_table = task.split(t, size, rank);
 		}
 		else
-		{
+		{	// SLAVE recieve the raw data
 			world->recv(0, 0, semi_table);
 		}
 		//Table(semi_table).print();
-		task.map(semi_table, c);
+
+		task.map(semi_table, c);	// pred function works here
+
+		// tag 1 : gather map result
 		auto map_res = c.get_map_context();
 		if (rank == 0)
-		{
+		{	// MASTER recieve the map result 
 			MapContextType other;
 			for (int i = 1; i < size; ++i)
 			{
@@ -51,25 +55,31 @@ public:
 			}
 		}
 		else
-		{
+		{	// SLAVEs send map result to MASTER
 			world->send(0, 1, map_res);
 		}
+
+		// tag 2 : combine all the results of "map" and send to SLAVEs
 		CombineType combine_res;
 		if (rank == 0)
 		{
 			combine_res = combine(map_res);
-			for(int i = 1; i < size; ++i)
+			// slice the combination result and distribute to SLAVE (MASTER handle the first part of data)
+			for (int i = 1; i < size; ++i)
 			{
 				auto begin = combine_res.begin() + combine_res.size() / size * i;
 				auto end = combine_res.begin() + combine_res.size() / size * (i + 1);
 				world->send(i, 2, CombineType(begin, size - 1 == i ? combine_res.end() : end));
 			}
+			// MASTER handle the first part of data
 			combine_res = CombineType(combine_res.begin(), combine_res.begin() + combine_res.size() / size);
 		}
 		else
 		{
 			world->recv(0, 2, combine_res);
 		}
+
+		// tag 3 : reduce phase
 		for (auto& p : combine_res)
 		{
 			task.reduce(p.first, p.second, c);
@@ -85,8 +95,8 @@ public:
 			}
 			//Table res = reduce_res.front.second;
 			ReduceValueType res = std::accumulate(
-				reduce_res.begin(), reduce_res.end(), 
-				ReduceValueType(), 
+				reduce_res.begin(), reduce_res.end(),
+				ReduceValueType(),
 				[](auto a, auto b) {return a + b.second; });
 			res.print();
 		}
@@ -99,10 +109,10 @@ public:
 	CombineType combine(MapContextType& map_context)
 	{
 		std::sort(map_context.begin(), map_context.end(), [](auto a, auto b) {return a.first > b.first; });
-		MapKeyType curr = map_context.front().first;
+		MapKeyType curr = map_context.front().first;	// key from map_context, whoes type is std::vector<std::pair<MapKeyType, MapValueType>>
 		CombineType res;
 		std::vector<MapValueType> same_key;
-		for (auto i = map_context.begin(); i != map_context.end(); ++i)
+		for (auto i = map_context.begin(); i != map_context.end(); ++i)		// i is the pair(key,value)
 		{
 			if (i->first == curr)
 			{

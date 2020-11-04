@@ -141,9 +141,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="SemiJoin.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Context.hpp" />
+    <ClInclude Include="FullReducer.hpp" />
     <ClInclude Include="Joiner.hpp" />
     <ClInclude Include="MapReduce.hpp" />
     <ClInclude Include="Projector.hpp" />

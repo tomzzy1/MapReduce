@@ -10,7 +10,8 @@ class Table
 {
 public:
 	Table() = default;
-	Table(const std::vector<std::vector<std::string>>& t): v(t) {}
+	Table(const std::vector<std::vector<std::string>>& t
+		, const std::vector<std::string>& a): v(t), attr(a) {}
 	auto begin()
 	{
 		return v.begin();
@@ -18,6 +19,10 @@ public:
 	auto end()
 	{
 		return v.end();
+	}
+	void update(Table t)
+	{
+	    v = t.v;
 	}
 	void push_back(std::vector<std::string>&& row)
 	{
@@ -27,6 +32,10 @@ public:
 	{
 		v.insert(v.end(), t.begin(), t.end());
 		return *this;
+	}
+	auto attribute() const
+	{
+		return attr;
 	}
 	std::vector<std::vector<std::string>> split(size_t size, size_t rank) const
 	{
@@ -38,6 +47,7 @@ public:
 	void serialize(Archive& ar, const unsigned int version)
 	{
 		ar & v;
+		ar & attr;
 	}
 	void print()
 	{
@@ -52,7 +62,7 @@ public:
 		std::cout << std::endl;
 	}
 
-private:
 	std::vector<std::vector<std::string>> v;
+	std::vector<std::string> attr;
 };
 

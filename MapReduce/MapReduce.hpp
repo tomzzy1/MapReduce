@@ -21,7 +21,7 @@ public:
 
 	MapReduce(mpi::communicator w, Task t) : world(&w), task(t) {}
 
-	void start(const InputType& t)
+	Table start(const InputType& t)
 	{
 		auto size = world->size();
 		auto rank = world->rank();
@@ -58,6 +58,7 @@ public:
 		if (rank == 0)
 		{
 			combine_res = combine(map_res);
+			//print_combine(combine_res);
 			for(int i = 1; i < size; ++i)
 			{
 				auto begin = combine_res.begin() + combine_res.size() / size * i;
@@ -88,11 +89,13 @@ public:
 				reduce_res.begin(), reduce_res.end(), 
 				ReduceValueType(), 
 				[](auto a, auto b) {return a + b.second; });
-			res.print();
+			//res.print();
+			return res;
 		}
 		else
 		{
 			world->send(0, 3, reduce_res);
+			return Table();
 		}
 	}
 
@@ -121,6 +124,28 @@ public:
 			res.emplace_back(curr, same_key);
 		}
 		return res;
+	}
+
+	void print_combine(const CombineType& c)
+	{
+		for (auto& p : c)
+		{
+			std::cout << "key: ";
+			for (auto& k : p.first)
+			{
+				std::cout << k;
+			}
+			std::cout << "value: ";
+			for (auto& v : p.second)
+			{
+				std::cout << "Table: " << v.first << ' ';
+				for (auto& i : v.second)
+				{
+					std::cout << i <<' ';
+				}
+			}
+			std::cout << std::endl;
+		}
 	}
 
 private:

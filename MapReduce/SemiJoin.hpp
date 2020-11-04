@@ -1,11 +1,12 @@
 #pragma once
 #include "Context.hpp"
 
-class Joiner
+class SemiJoiner
 {
 public:
-	Joiner(std::vector<int> l1, std::vector<int> l2) : first(l1), second(l2) {}
-	Joiner(const Joiner&) = default;
+	SemiJoiner(std::vector<int> l1, std::vector<int> l2): first(l1), second(l2) 
+	{}
+	SemiJoiner(const SemiJoiner&) = default;
 
 	using InputType = std::pair<Table, Table>;
 	using SplitType = std::vector<std::pair<int, std::vector<std::string>>>;
@@ -44,29 +45,21 @@ public:
 					{
 						new_key.push_back(row.second[i]);
 					}
-					else
-					{
-						new_value.push_back(row.second[i]);
-					}
+					new_value.push_back(row.second[i]);
 				}
 				c.write(new_key, std::pair<int, std::vector<std::string>>(0, new_value));
 			}
 			if (row.first == 1)
 			{
 				MapKeyType new_key;
-				std::vector<std::string> new_value;
 				for (int i = 0; i < row.second.size(); ++i)
 				{
 					if (std::find(second.begin(), second.end(), i) != second.end())
 					{
 						new_key.push_back(row.second[i]);
 					}
-					else
-					{
-						new_value.push_back(row.second[i]);
-					}
 				}
-				c.write(new_key, std::pair<int, std::vector<std::string>>(1, new_value));
+				c.write(new_key, std::pair<int, std::vector<std::string>>(1, std::vector<std::string>{}));
 			}
 		}
 	}
@@ -88,17 +81,10 @@ public:
 		ReduceValueType table;
 		for (auto& i : first_table)
 		{
-			for (auto& j : second_table)
-			{
-				auto new_row = i;
-				new_row.insert(new_row.begin(), key.begin(), key.end());
-				new_row.insert(new_row.end(), j.begin(), j.end());
-				table.push_back(std::move(new_row));
-			}
+			table.push_back(std::move(i));
 		}
 		c.write(key, table);
 	}
-
 private:
 	std::vector<int> first;
 	std::vector<int> second;

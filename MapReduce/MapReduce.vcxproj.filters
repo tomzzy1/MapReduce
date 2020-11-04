@@ -18,6 +18,9 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="SemiJoin.hpp">
+      <Filter>头文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Table.hpp">
@@ -36,6 +39,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Joiner.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FullReducer.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
